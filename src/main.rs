@@ -4,7 +4,7 @@ use std::io::prelude::*;
 #[macro_use]
 extern crate glium;
 use glium::{Display, glutin, index, Surface, VertexBuffer};
-use glium::glutin::{Event, WindowEvent};
+use glium::glutin::{Event, VirtualKeyCode, WindowEvent};
 
 
 #[derive(Copy, Clone)]
@@ -60,6 +60,11 @@ fn main() {
             Event::WindowEvent { event, .. } => {
                 match event {
                     WindowEvent::CloseRequested => should_return = true,
+                    WindowEvent::KeyboardInput { input, .. } => {
+                        if let Some(VirtualKeyCode::Escape) = input.virtual_keycode {
+                            should_return = true;
+                        }
+                    }
                     _ => {}
                 }
             }
