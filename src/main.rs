@@ -18,7 +18,7 @@ fn main() {
     let mut events_loop = glutin::EventsLoop::new();
     let window = glutin::WindowBuilder::new()
         .with_title("Ray March".to_string())
-        .with_dimensions((1024, 768).into());
+        .with_dimensions((600, 600).into());
     let context = glutin::ContextBuilder::new();
     let display = Display::new(window, context, &events_loop).unwrap();
 
