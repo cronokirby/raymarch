@@ -2,25 +2,35 @@
 
 out vec4 color;
 
-float good_mod(float f, float m) {
-    if (f > m) {
-        return -m;
-    } else if (-f > m) {
-        return m;
-    } else {
-        return f;
-    }
-}
+
+const float PI = 3.14159;
 
 float DE(vec3 pos) {
-    vec3 c = vec3(0.5, 0.5, -2.0);
-    //float x2 = length(pos + vec3(1.2, 0.0, 0.0) - c) - 0.05;
-    //float x3 = length(pos - vec3(1.2, 0.0, 0.0) - c) - 0.05;
-    pos.x = mod(pos.x, 1.0);
-    pos.y = mod(pos.y, 1.0);
-    pos.z = -mod(-pos.z, 2.0);
-    float x1 = length(pos - c) - 0.2;
-    return x1;
+    pos.x = sin(PI * pos.x);
+    pos.y = sin(PI * pos.y);
+    vec3 z = pos;
+	float dr = 1.0;
+	float r = 0.0;
+    float Power = 20.0;
+	for (int i = 0; i < 4; i++) {
+		r = length(z);
+		if (r > 2.0) break;
+		
+		// convert to polar coordinates
+		float theta = acos(z.z/r);
+		float phi = atan(z.y,z.x);
+		dr =  pow( r, Power-1.0)*Power*dr + 1.0;
+		
+		// scale and rotate the point
+		float zr = pow( r,Power);
+		theta = theta*Power;
+		phi = phi*Power;
+		
+		// convert back to cartesian coordinates
+		z = zr*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
+		z+=pos;
+	}
+	return 0.5*log(r)*r/dr;
 }
 
 vec4 trace(vec3 from, vec3 direction) {
@@ -29,7 +39,7 @@ vec4 trace(vec3 from, vec3 direction) {
     vec3 y_dir = vec3(0, 0.0001, 0);
     vec3 z_dir = vec3(0, 0, 0.0001);
     vec3 h = normalize(vec3(0.3, 0.4, 1));
-    for (int steps = 0; steps < 20; ++steps) {
+    for (int steps = 0; steps < 40; ++steps) {
         float d = DE(pos);
         vec3 n = normalize(vec3(
             DE(pos + x_dir) - DE(pos - x_dir),
@@ -37,31 +47,22 @@ vec4 trace(vec3 from, vec3 direction) {
             DE(pos + z_dir) - DE(pos - z_dir)
         ));
         if (d < 0.001) {
-            float scale = 1.0 - float(steps) / 20;
-            vec3 ambient = vec3(0.1, 0.0, 0.2);
-            float specular = 0.0;
-            float lambertian = max(dot(n, h), 0.0);
-            if (lambertian > 0.0) {
-                specular = pow(lambertian, 4.0);
-            }
-            vec3 color = ambient
-                + vec3(0.2, 0.0, 0.6) * max(dot(n, h), 0.0) * scale
-                + vec3(1.0, 1.0, 1.0) * specular * scale;
-            return vec4(color, 1.0);
+            float scale = 1.0 - float(steps) / 40;
+            return vec4(scale, scale, scale, 1.0);
         }
         pos += d * direction;
     }
-    return vec4(0.0, 0.0, 0.04, 1.0);
+    return vec4(0.0, 0.0, 0.0, 1.0);
 }
 
 void main() {
-    float aspect = 600 / 600;
-    float half_height = 1;
-    float half_width = aspect * half_height;
-    vec3 lower_left = vec3(-half_width, -half_height, -1);
-    vec3 horizontal = vec3(2 * half_width, 0, 0);
-    vec3 vertical = vec3(0, 2 * half_height, 0);
-    vec3 origin = vec3(0, 0, 0);
-    vec3 direction = lower_left + gl_FragCoord.x / 600 * horizontal + gl_FragCoord.y / 600 * vertical;
-    color = trace(origin, direction);
+    vec3 camera_origin = vec3(1.0, 1.0, 1.4);
+    vec3 camera_target = vec3(0.0, 0.0, 0.0);
+    vec3 up_dir = vec3(0.0, 1.0, 0.0);
+    vec3 w = normalize(camera_target - camera_origin);
+    vec3 u = normalize(cross(up_dir, w));
+    vec3 v = cross(w, u);
+    vec2 screen_pos = -1.0 + 2.0 * gl_FragCoord.xy / 600;
+    vec3 direction = normalize(w + screen_pos.x * u + screen_pos.y * v);
+    color = trace(camera_origin, direction);
 }
