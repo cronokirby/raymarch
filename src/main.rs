@@ -49,8 +49,6 @@ struct Camera {
     forward: Vec3,
     /// The position of the Camera in the global space
     position: Vec3,
-    /// The controls for the Camera
-    controls: Controls
 }
 
 impl Camera {
@@ -72,25 +70,21 @@ impl Camera {
         );
         let up = forward.cross(right).norm();
 
-        Camera { 
-            theta, phi, up, right, forward, position,
-            controls: Controls::new()
-        }
+        Camera { theta, phi, up, right, forward, position }
     }
 
-    fn update(&mut self, dt: f32, event: &WindowEvent) {
+    fn update(&mut self, dt: f32, controls: &Controls) {
         let move_speed = 2.0 * dt;
-        self.controls.update(event);
-        if self.controls.left {
+        if controls.left {
             self.position -= self.right * move_speed;
         }
-        if self.controls.right {
+        if controls.right {
             self.position += self.right * move_speed;
         }
-        if self.controls.up {
-            self.position += self.forward * move_speed;
+        if controls.up {
+           self.position += self.forward * move_speed;
         }
-        if self.controls.down {
+        if controls.down {
             self.position -= self.forward * move_speed;
         }
     }
@@ -156,6 +150,7 @@ fn main() {
     let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
 
     let mut camera = Camera::default();
+    let mut controls = Controls::new();
     let mut then = Instant::now();
 
     loop {
@@ -188,15 +183,10 @@ fn main() {
         ).unwrap();
 
         target.finish().unwrap();
-
-        let now = Instant::now();
-        let dt = (now.duration_since(then).subsec_micros() as f32) / 1000000.0;
-        then = now;
-
         let mut should_return = false;
         events_loop.poll_events(|e| match e {
             Event::WindowEvent { event, .. } => {
-                camera.update(dt, &event);
+                controls.update(&event);
                 match event {
                     WindowEvent::CloseRequested => should_return = true,
                     WindowEvent::KeyboardInput { input, .. } => {
@@ -212,5 +202,11 @@ fn main() {
         if should_return {
             return;
         }
+
+        let now = Instant::now();
+        let mut dt = (now.duration_since(then).subsec_micros() as f32) / 1000000.0;
+        dt += now.duration_since(then).as_secs() as f32;
+        then = now;
+        camera.update(dt, &controls);
     }
 }
