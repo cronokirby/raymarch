@@ -18,14 +18,17 @@ struct Controls {
     up: bool,
     down: bool,
     width: f32,
-    height: f32
+    height: f32,
+    mouse_dx: f32,
+    mouse_dy: f32
 }
 
 impl Controls {
     fn new(width: f32, height: f32) -> Self {
         Controls {
             left: false, right: false, up: false, down: false,
-            width, height
+            width, height,
+            mouse_dx: 0.0, mouse_dy: 0.0
         }
     }
 
@@ -40,6 +43,14 @@ impl Controls {
                     Some(VirtualKeyCode::S) => self.down = toggle,
                     _ => {}
                 }
+            }
+            WindowEvent::CursorMoved { position, .. } => {
+                let half_width = self.width / 2.0;
+                let half_height = self.height / 2.0;
+                self.mouse_dx = (position.x as f32) / half_width - 1.0;
+                if self.mouse_dx.abs() < 0.2 { self.mouse_dx = 0.0 }
+                self.mouse_dy = (position.y as f32)  / half_height - 1.0;
+                if self.mouse_dy.abs() < 0.2 { self.mouse_dy = 0.0 }
             }
             WindowEvent::Resized(size) => {
                 self.width = size.width as f32;
@@ -99,6 +110,25 @@ impl Camera {
         if controls.down {
             self.position -= self.forward * move_speed;
         }
+
+        let turn_speed = 1.0 * dt;
+
+        self.theta += controls.mouse_dx * turn_speed;
+        let pi2 = std::f32::consts::PI * 2.0;
+        if self.theta > pi2 {
+            self.theta -= pi2;
+        } else if self.theta < 0.0 {
+            self.theta += pi2;
+        }
+
+        self.phi += controls.mouse_dy * turn_speed;
+        if self.phi > pi2 {
+            self.phi -= pi2;
+        } else if self.phi < 0.0 {
+            self.phi += pi2;
+        }
+
+        *self = Camera::from_angles(self.theta, self.phi, self.position);
     }
 
     fn get_up(&self) -> [f32; 3] {
@@ -172,16 +202,15 @@ fn main() {
             g_cam_right: camera.get_right(),
             g_cam_forward: camera.get_forward(),
             g_eye: camera.get_position(),
-            g_focal_length: 1.67f32,
+            g_focal_length: 1.8f32,
             g_z_near: 0.0f32,
-            g_z_far: 15.0f32,
-            g_moveSpeed: 0.1f32,
+            g_z_far: 40.0f32,
             g_rm_steps: 64,
             g_rm_epsilon: 0.001f32,
             g_sky_color: [0.31, 0.47, 0.67, 1.0f32],
             g_ambient: [0.15, 0.2, 0.32, 1.0f32],
             g_light_pos: [0.25, 2.0, 0.0f32],
-            g_light_color: [0.67, 0.87, 0.93, 1.0f32],
+            g_light_color: [1.0, 1.0, 1.0, 1.0f32],
             g_window_width: controls.width,
             g_window_height: controls.height,
             g_aspect: controls.width / controls.height

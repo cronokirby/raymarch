@@ -71,10 +71,13 @@ float op_subtract(float d0, float d1) {
 // Defines the distance field for the scene
 float dist_scene(vec3 p) {
     vec3 q = p;
-    q.xz = mod(q.xz, 1.0) - vec2(0.5);
-    float box = sd_box(q - vec3(0.0, 1.0, 0.0), vec3(0.2));
+    q.x = mod(q.x, 1.0) - 0.5;
+    q.z = mod(q.z, 2.0) - 1.0;
+    float box = sd_box(q - vec3(0.0, 0.0, 0.0), vec3(0.2));
     p.x = mod(p.x, 2.0);
-    float sphere = sd_sphere(p - vec3(1.0, 1.0, 2.0), 0.5);
+    p.z = mod(p.z, 3.0);
+    float sphere = sd_sphere(p - vec3(1.0, 1.0, 2.0), 0.4);
+    float sphere2 = sd_sphere(p - vec3(0.0, 0.0, 0.0), 2.0);
     return min(box, sphere);
 }
 
@@ -201,12 +204,11 @@ vec4 compute_color(vec3 ro, vec3 rd) {
     float z = map_to(t, g_z_near, g_z_far, 1, 0); // Map depth to [0, 1]
 
     // Color based on depth
-    //color = vec4(1.0f) * z;
 
     // Diffuse lighting
     color = texture * (
         get_shading(p, normal, g_light_pos, g_light_color) +
-        get_shading(p, normal, vec3(2.0, 1.0, 0.0), vec4(1.0, 0.5, 0.5, 1.0))
+        get_shading(p, normal, vec3(2.0, 1.0, 0.0), vec4(0.7, 0.5, 0.5, 1.0))
         ) / 2.0;
 
     // Color based on surface normal
@@ -220,6 +222,7 @@ vec4 compute_color(vec3 ro, vec3 rd) {
     float zSqrd = z * z;
     color = mix(g_sky_color, color, zSqrd * (3.0 - 2.0 * z)); // Fog
 
+    color = 0.9 * color + 0.1 * vec4(1.0) * z;
     return color;
 }
 
