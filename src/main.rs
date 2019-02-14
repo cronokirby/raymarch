@@ -18,7 +18,7 @@ fn main() {
     let mut events_loop = glutin::EventsLoop::new();
     let window = glutin::WindowBuilder::new()
         .with_title("Ray March".to_string())
-        .with_dimensions((600, 600).into());
+        .with_dimensions((1024, 768).into());
     let context = glutin::ContextBuilder::new();
     let display = Display::new(window, context, &events_loop).unwrap();
 
@@ -45,11 +45,32 @@ fn main() {
 
     loop {
         let mut target = display.draw();
+        let uniforms = uniform! {
+            g_theta: 0.0f32,
+            g_phi: 0.0f32,
+            g_camUp: [0.0, 1.0, 0.0f32],
+            g_camRight: [1.0, 0.0, 0.0f32],
+            g_camForward: [0.0, 0.0, 1.0f32],
+            g_eye: [0.0, 0.0, -2.0f32],
+            g_focalLength: 1.67f32,
+            g_zNear: 0.0f32,
+            g_zFar: 15.0f32,
+            g_moveSpeed: 0.1f32,
+            g_rmSteps: 64,
+            g_rmEpsilon: 0.001f32,
+            g_skyColor: [0.31, 0.47, 0.67, 1.0f32],
+            g_ambient: [0.15, 0.2, 0.32, 1.0f32],
+            g_light0Position: [0.25, 2.0, 0.0f32],
+            g_light0Color: [0.67, 0.87, 0.93, 1.0f32],
+            g_windowWidth: 1024f32,
+            g_windowHeight: 768f32,
+            g_aspectRatio: 1024.0 / 768.0f32
+        };
         target.draw(
             &vertex_buffer,
             index::NoIndices(index::PrimitiveType::TrianglesList),
             &program,
-            &uniform! {},
+            &uniforms,
             &Default::default()
         ).unwrap();
 
