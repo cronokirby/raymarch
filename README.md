@@ -11,4 +11,4 @@ in the shaders.
 ## Examples
 Note that all of these are rendered in real time!
 
-![Squares and Spheres][imags/screenshot1.png]
+![Squares and Spheres](images/screenshot1.png)
