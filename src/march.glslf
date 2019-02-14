@@ -63,6 +63,32 @@ float sd_box(vec3 p, vec3 size) {
     return min(max(d.x, max(d.y, d.z)), 0.0) + ud_box(p, size);
 }
 
+float sd_bulb(vec3 pos) {
+ 	vec3 z = pos;
+	float dr = 1.0;
+	float r = 0.0;
+    float Power = 10.0;
+	for (int i = 0; i < 10.0 ; i++) {
+		r = length(z);
+		if (r > 1.2) break;
+		
+		// convert to polar coordinates
+		float theta = acos(z.z / r);
+		float phi = atan(z.y, z.x);
+		dr =  pow(r, Power - 1.0) * Power * dr + 1.0;
+		
+		// scale and rotate the point
+		float zr = pow(r, Power);
+		theta = theta * Power;
+		phi = phi * Power;
+		
+		// convert back to cartesian coordinates
+		z = zr * vec3(sin(theta) * cos(phi), sin(phi) * sin(theta), cos(theta));
+		z += pos;
+	}
+	return 0.5 * log(r) * r / dr;
+}
+
 // Subtracts d1 from d0, assuming d1 is a signed distance
 float op_subtract(float d0, float d1) {
     return max(d0, -d1);
@@ -74,10 +100,10 @@ float dist_scene(vec3 p) {
     q.x = mod(q.x, 1.0) - 0.5;
     q.z = mod(q.z, 2.0) - 1.0;
     float box = sd_box(q - vec3(0.0, 0.0, 0.0), vec3(0.2));
-    p.x = mod(p.x, 2.0);
-    p.z = mod(p.z, 3.0);
-    float sphere = sd_sphere(p - vec3(1.0, 1.0, 2.0), 0.4);
-    float sphere2 = sd_sphere(p - vec3(0.0, 0.0, 0.0), 2.0);
+    q = p;
+    q.x = mod(q.x, 2.0);
+    q.z = mod(q.z, 3.0);
+    float sphere = sd_sphere(q - vec3(1.0, 1.0, 2.0), 0.4);
     return min(box, sphere);
 }
 
