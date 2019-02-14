@@ -16,24 +16,36 @@ struct Controls {
     left: bool,
     right: bool,
     up: bool,
-    down: bool    
+    down: bool,
+    width: f32,
+    height: f32
 }
 
 impl Controls {
-    fn new() -> Self {
-        Controls { left: false, right: false, up: false, down: false }
+    fn new(width: f32, height: f32) -> Self {
+        Controls {
+            left: false, right: false, up: false, down: false,
+            width, height
+        }
     }
 
     fn update(&mut self, event: &WindowEvent) {
-        if let WindowEvent::KeyboardInput { input, .. } = event {
-            let toggle = input.state == ElementState::Pressed;
-            match input.virtual_keycode {
-                Some(VirtualKeyCode::A) => self.left = toggle,
-                Some(VirtualKeyCode::D) => self.right = toggle,
-                Some(VirtualKeyCode::W) => self.up = toggle,
-                Some(VirtualKeyCode::S) => self.down = toggle,
-                _ => {}
+        match event {
+            WindowEvent::KeyboardInput { input, .. } => {
+                let toggle = input.state == ElementState::Pressed;
+                match input.virtual_keycode {
+                    Some(VirtualKeyCode::A) => self.left = toggle,
+                    Some(VirtualKeyCode::D) => self.right = toggle,
+                    Some(VirtualKeyCode::W) => self.up = toggle,
+                    Some(VirtualKeyCode::S) => self.down = toggle,
+                    _ => {}
+                }
             }
+            WindowEvent::Resized(size) => {
+                self.width = size.width as f32;
+                self.height = size.height as f32;
+            }
+            _ => {}
         }
     }
 }
@@ -150,7 +162,7 @@ fn main() {
     let vertex_buffer = VertexBuffer::new(&display, &vertices).unwrap();
 
     let mut camera = Camera::default();
-    let mut controls = Controls::new();
+    let mut controls = Controls::new(1024.0, 768.0);
     let mut then = Instant::now();
 
     loop {
@@ -170,9 +182,9 @@ fn main() {
             g_ambient: [0.15, 0.2, 0.32, 1.0f32],
             g_light_pos: [0.25, 2.0, 0.0f32],
             g_light_color: [0.67, 0.87, 0.93, 1.0f32],
-            g_window_width: 1024f32,
-            g_window_height: 768f32,
-            g_aspect: 1024.0 / 768.0f32
+            g_window_width: controls.width,
+            g_window_height: controls.height,
+            g_aspect: controls.width / controls.height
         };
         target.draw(
             &vertex_buffer,
